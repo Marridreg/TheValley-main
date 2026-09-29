@@ -76,7 +76,15 @@ class StateManager:
         self.chars_dir = self.data_dir / "characters"
         self.saves_dir = Path(saves_dir).expanduser() if saves_dir else default_saves_dir()
         self.saves_dir.mkdir(parents=True, exist_ok=True)
+        self.reset()
 
+    def reset(self) -> None:
+        """Turn 0. Everything reloads from data/; nothing survives from the session.
+
+        This is the whole of "new game". It deliberately does not touch the
+        saves directory — /new owns the autosave, and named saves are the
+        player's business.
+        """
         # Narrator-visible. Public geography, culture, tone. No secrets.
         self.world_card = self._load("world.json")
 
@@ -109,6 +117,14 @@ class StateManager:
         self.turn_count = 0
 
         self._card_cache: dict[str, dict] = {}
+
+    def delete_autosave(self) -> bool:
+        """Remove the autosave. True if there was one."""
+        path = self.saves_dir / "_autosave.json"
+        existed = path.exists()
+        path.unlink(missing_ok=True)
+        (path.parent / (path.name + ".tmp")).unlink(missing_ok=True)
+        return existed
 
     # ── loading ──
 

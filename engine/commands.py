@@ -16,7 +16,7 @@ from .state import prose_reveals
 
 HELP = """\
 ═══ COMMANDS ═══
-  GAME     /save [slot]  /load [slot]  /saves  /preset [name]  /status
+  GAME     /new  /save [slot]  /load [slot]  /saves  /preset [name]  /status
   INFO     /inventory  /journal  /providers  /where
   META     /note <text>  /feedback <text>  /retry  /undo  /help
   SWIPE    /swipe        re-tell the last turn (same events, new prose)
@@ -48,6 +48,25 @@ class CommandRouter:
             return True, f"{cmd} failed: {type(exc).__name__}: {exc}"
 
     # ── game ──
+
+    def cmd_new(self, args):
+        """Start over. Two steps on purpose: the autosave is the only copy of
+        a session nobody /save'd, and prose cannot be regenerated."""
+        st = self.wall.state
+        if not args or args[0].lower() != "confirm":
+            turns = st.turn_count
+            where = f"turn {turns}" if turns else "turn 0 — nothing to lose"
+            return True, (
+                f"start a new game?  current session: {where}.\n"
+                "  this DELETES the autosave. there is no undo. named saves "
+                "(/saves) are kept.\n"
+                "  /save <slot> first if you want this one back.\n"
+                "  type  /new confirm  to go through with it."
+            )
+        opening = self.wall.new_game()
+        return True, "new game. the autosave is gone." + (
+            "" if opening else "  (no opening_text in world.json)"
+        )
 
     def cmd_save(self, args):
         slot = args[0] if args else "quicksave"

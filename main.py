@@ -198,6 +198,13 @@ class GameAPI:
         if self._commands.is_command(text):
             handled, payload = self._commands.execute(text)
             if handled:
+                if self._wall.reset_pending:
+                    self._wall.reset_pending = False
+                    self._emit({
+                        "type": "reset",
+                        "banner": self._wall.banner(),
+                        "opening": self._wall.state.world_card.get("opening_text", ""),
+                    })
                 self._emit({"type": "system", "text": payload})
                 self._emit({"type": "done", "elapsed": 0})
                 self._emit({"type": "meta", "preset": self._wall.presets.active})

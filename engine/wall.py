@@ -93,6 +93,8 @@ class Wall:
         self.last_turn: _LastTurn | None = None
 
         self.resumed_from: str | None = None
+        # Set by new_game(); the bridge consumes it to clear the transcript.
+        self.reset_pending = False
         if (self.state.saves_dir / "_autosave.json").exists():
             try:
                 self.state.load("_autosave")
@@ -121,6 +123,19 @@ class Wall:
         self.busy = False
 
     # ── introspection ──
+
+    def new_game(self) -> str:
+        """Start over. The autosave is deleted, not archived: the player was
+        told, and a "_autosave_old" that nobody loads is the same thing the
+        resume-by-default comment above warns about. Named saves survive.
+        Returns the opening text so the caller can put the player at turn 0
+        rather than leaving them staring at the old transcript."""
+        self.state.delete_autosave()
+        self.state.reset()
+        self.last_turn = None
+        self.resumed_from = None
+        self.reset_pending = True
+        return self.state.world_card.get("opening_text", "")
 
     def banner(self) -> str:
         g, n = self.gm.provider, self.narrator.provider

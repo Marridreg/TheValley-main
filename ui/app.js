@@ -184,6 +184,19 @@ window.valley = {
         append(e.text.replace(/_/g, " "), "discovery");
         break;
 
+      case "reset":
+        // /new confirm. Wipe the transcript so the old story is not sitting
+        // above the new one, and put the player at the opening like a boot.
+        narrative.replaceChildren();
+        window.__turn = 0;
+        window.__elapsed = 0;
+        window.__briefing = null;
+        renderPortraits([]);
+        refreshMeta();
+        append(e.banner, "system");
+        if (e.opening) append(e.opening, "prose");
+        break;
+
       case "system":
         append(e.text, "system");
         break;
