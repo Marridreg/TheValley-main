@@ -22,12 +22,14 @@ sys.path.insert(0, str(ROOT))
 
 def main() -> int:
     from engine.commands import CommandRouter
+    from engine.engrams import EngramStore
     from engine.state import StateManager
     from engine.wall import Wall
 
     saves = Path(os.environ["VALLEY_SAVES_DIR"])
     wall = Wall.__new__(Wall)
     wall.state = StateManager(ROOT / "data", saves)
+    wall.engrams = EngramStore(wall.state)
     wall.last_turn = "not-none"
     wall.resumed_from = "turn 9"
     wall.reset_pending = False
@@ -43,6 +45,10 @@ def main() -> int:
     st.discovered.append("rumor_x")
     st.authors_note = "keep it grim"
     st.pc["vitals"] = {"health": {"current": 1}}
+    st.mode = "realism"
+    st.scene_count = 4
+    wall.engrams.encode("heisenberg", "player", "episode", "lied", valence=-0.5, appraisal_delta=0.4)
+    assert len(wall.engrams.web("heisenberg")) == 1
     st.autosave()
     st.save("keeper")
     assert (saves / "_autosave.json").exists()
@@ -59,9 +65,11 @@ def main() -> int:
 
     fresh = StateManager(ROOT / "data", saves)
     for attr in ("pc", "world", "vault", "fragments", "chat_history", "revelation_log",
-                 "beliefs", "discovered", "offscreen", "authors_note", "turn_count"):
+                 "beliefs", "engrams", "scene_count", "mode", "discovered", "offscreen",
+                 "authors_note", "turn_count"):
         assert getattr(st, attr) == getattr(fresh, attr), f"{attr} did not reset"
     assert st.turn_count == 0
+    assert len(wall.engrams.web("heisenberg")) == 0, "the memory web survived /new confirm"
 
     assert not (saves / "_autosave.json").exists(), "autosave survived /new confirm"
     assert (saves / "keeper.json").exists(), "named save was deleted"

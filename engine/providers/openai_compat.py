@@ -107,7 +107,7 @@ class OpenAICompatProvider(Provider):
         self._caps = self._detect(capability_overrides or {})
 
     def _detect(self, overrides: dict) -> Capabilities:
-        m = self.model.lower()
+        m = self.model.lower().replace(".","-")
         samplers_ok = not any(h in m for h in _NO_SAMPLER_HINTS)
         caps = Capabilities(
             # Optimistic: most modern endpoints do support this, and when they

@@ -76,6 +76,8 @@ class CommandRouter:
     def cmd_load(self, args):
         slot = args[0] if args else "quicksave"
         self.wall.state.load(slot)
+        # The ledger came back with the save; its web is derived, so rebuild.
+        self.wall.engrams.rebuild_webs()
         return True, f"loaded {slot} — turn {self.wall.state.turn_count}. /where to reorient."
 
     def cmd_saves(self, args):

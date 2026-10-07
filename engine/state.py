@@ -111,6 +111,15 @@ class StateManager:
         # survive saves, or "the miss never recurs" is false and a character
         # re-rolls their opinion of the player between sessions.
         self.beliefs: dict[str, dict] = {}
+        # Engram ledger (engine/engrams.py): per-owner, per-entity memory
+        # records. Same rule as beliefs — a character's memory of the player
+        # must not reset between sessions. scene_count is the decay clock.
+        # The associative web over the ledger is derived at load, never saved.
+        self.engrams: dict[str, dict] = {}
+        self.scene_count = 0
+        # Game mode ("normal" | "realism") keys the ledger's preset table.
+        # It travels with the save so a realism game never softens on reload.
+        self.mode = "normal"
         self.discovered: list[str] = []
         self.offscreen: list[dict] = []
         self.authors_note = ""
@@ -363,6 +372,9 @@ class StateManager:
             "chat_history": self.chat_history,
             "revelation_log": self.revelation_log,
             "beliefs": self.beliefs,
+            "engrams": self.engrams,
+            "scene_count": self.scene_count,
+            "mode": self.mode,
             "discovered": self.discovered,
             "offscreen": self.offscreen,
             "authors_note": self.authors_note,
@@ -409,6 +421,9 @@ class StateManager:
         self.chat_history = s.get("chat_history", [])
         self.revelation_log = s.get("revelation_log", [])
         self.beliefs = s.get("beliefs", {})
+        self.engrams = s.get("engrams", {})
+        self.scene_count = s.get("scene_count", 0)
+        self.mode = s.get("mode", "normal")
         self.discovered = s.get("discovered", [])
         self.offscreen = s.get("offscreen", [])
         self.authors_note = s.get("authors_note", "")

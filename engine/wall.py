@@ -17,6 +17,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Callable
 
+from .engrams import EngramStore
 from .gm import GameMaster
 from .narrator import Narrator
 from .presets import PresetManager
@@ -103,6 +104,12 @@ class Wall:
                 # A corrupt autosave must not block launch — say so and start fresh.
                 self.resumed_from = f"autosave unreadable ({type(exc).__name__}), starting fresh"
 
+        # Per-character memory (engine/engrams.py). Constructed after the
+        # autosave is read, so the associative web is built from the ledger
+        # that was actually loaded. new_game() and /load rebuild it; the
+        # store reads state.mode itself, so neither needs a new store.
+        self.engrams = EngramStore(self.state)
+
         gm_block = dict(config.get("gm") or {})
         nar_block = dict(config.get("narrator") or {})
 
@@ -132,6 +139,7 @@ class Wall:
         rather than leaving them staring at the old transcript."""
         self.state.delete_autosave()
         self.state.reset()
+        self.engrams.rebuild_webs()
         self.last_turn = None
         self.resumed_from = None
         self.reset_pending = True
